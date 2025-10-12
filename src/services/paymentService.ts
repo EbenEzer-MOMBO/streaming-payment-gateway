@@ -86,6 +86,10 @@ export const createBill = async (payload: CreateBillPayload): Promise<BillRespon
     }
     
     console.log("Facture créée avec succès:", data.response.e_bills[0]);
+    
+    // Nous ne faisons plus l'appel webhook ici, il sera fait dans le composant checkout
+    // pour inclure les informations complètes de l'acheteur
+    
     return data.response.e_bills[0];
   } catch (error) {
     console.error("Erreur lors de la création de la facture:", error);

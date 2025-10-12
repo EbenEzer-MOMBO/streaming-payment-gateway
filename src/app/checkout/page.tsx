@@ -185,6 +185,45 @@ export default function CheckoutPage() {
             payment_system: paymentSystem
           });
           
+          // Envoi des données complètes vers le webhook (incluant les informations de l'acheteur)
+          try {
+            console.log("Envoi des données vers le webhook...");
+            const webhookResponse = await fetch("https://hook.eu2.make.com/qv3xiqhp1pth43b8xwpqn1krfj3kd1h2", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                bill: bill,
+                service: {
+                  id: selectedService.id,
+                  name: selectedService.name,
+                  price: selectedService.price
+                },
+                buyer: {
+                  name: buyerInfo.name,
+                  phone: buyerInfo.phone,
+                  email: buyerInfo.email || "ebenezermombo@gmail.com"
+                },
+                payment: {
+                  method: selectedPaymentMethod,
+                  number: paymentNumber
+                },
+                timestamp: new Date().toISOString(),
+                status: "created"
+              }),
+            });
+            
+            if (webhookResponse.ok) {
+              console.log("Données envoyées avec succès au webhook:", await webhookResponse.text());
+            } else {
+              console.error(`Erreur lors de l'envoi au webhook: ${webhookResponse.status}`);
+            }
+          } catch (webhookError) {
+            console.error("Erreur lors de l'envoi au webhook:", webhookError);
+            // On ne propage pas cette erreur pour ne pas bloquer le processus principal
+          }
+          
           // Rediriger vers la page de confirmation avec l'ID de la facture et les informations de paiement
           router.push(`/checkout/confirmation?bill_id=${bill.bill_id}&service_name=${selectedService.name}&payment_method=${selectedPaymentMethod}&phone_number=${paymentNumber}`);
         } catch (error) {
