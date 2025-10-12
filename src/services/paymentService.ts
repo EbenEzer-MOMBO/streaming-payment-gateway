@@ -25,7 +25,7 @@ interface BillResponse {
   payer_name: string;
   payee_id: string;
   payee_name: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 interface CreateBillResponse {

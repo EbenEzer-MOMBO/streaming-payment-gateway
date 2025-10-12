@@ -82,7 +82,7 @@ export default function PaymentProgressBar({
 
           {/* Message d'attente */}
           <p className="text-sm text-gray-500">
-            Veuillez patienter pendant l'initialisation...
+            Veuillez patienter pendant l&apos;initialisation...
           </p>
         </div>
       </div>

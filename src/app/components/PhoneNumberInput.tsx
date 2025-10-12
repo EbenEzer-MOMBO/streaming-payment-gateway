@@ -27,6 +27,7 @@ const countries: Country[] = [
 export default function PhoneNumberInput({ 
   value, 
   onChange, 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   placeholder = "6XXXXXXX", 
   required = false,
   className = "",

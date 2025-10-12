@@ -32,7 +32,7 @@ export default function PaymentCountdown({
         return newTime;
       });
 
-      setProgress(prev => {
+      setProgress(() => {
         const newProgress = ((timeLeft - 1) / duration) * 100;
         return Math.max(0, newProgress);
       });
@@ -153,7 +153,7 @@ export default function PaymentCountdown({
 
           {/* Note importante */}
           <p className="text-xs text-gray-500 mt-4">
-            Le paiement sera automatiquement vérifié. Gardez cet écran ouvert jusqu'à confirmation.
+            Le paiement sera automatiquement vérifié. Gardez cet écran ouvert jusqu&apos;à confirmation.
           </p>
         </div>
       </div>

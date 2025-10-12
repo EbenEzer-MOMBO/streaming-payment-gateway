@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Image from "next/image";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import PhoneNumberInput from "../components/PhoneNumberInput";
 import PaymentProgressBar from "../components/PaymentProgressBar";
 import { createBill, generateExternalReference } from "@/services/paymentService";
@@ -26,15 +26,38 @@ const paymentMethods: PaymentMethod[] = [
   }
 ];
 
-export default function Checkout() {
-  const searchParams = useSearchParams();
+// Composant de chargement pour la Suspense
+function CheckoutLoading() {
+  return (
+    <div className="flex items-center justify-center min-h-screen">
+      <div className="text-center">
+        <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white mb-4"></div>
+        <h2 className="text-xl font-semibold text-white">Chargement...</h2>
+      </div>
+    </div>
+  );
+}
+
+// Composant principal qui utilise window.location pour les paramètres
+function CheckoutContent() {
   const router = useRouter();
+  const [params, setParams] = useState<{[key: string]: string}>({});
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string | null>(null);
   
+  // Récupérer les paramètres d'URL manuellement
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const paramsObj: {[key: string]: string} = {};
+    urlParams.forEach((value, key) => {
+      paramsObj[key] = value;
+    });
+    setParams(paramsObj);
+  }, []);
+  
   // Récupérer les informations du service depuis les paramètres d'URL
-  const serviceId = searchParams.get("service");
-  const serviceName = searchParams.get("name");
-  const servicePrice = searchParams.get("price");
+  const serviceId = params.service || "";
+  const serviceName = params.name || "";
+  const servicePrice = params.price || "";
   
   // État pour les informations de l'acheteur
   const [buyerInfo, setBuyerInfo] = useState({
@@ -107,9 +130,7 @@ export default function Checkout() {
 
   // Vérifier si le formulaire est valide
   const isFormValid = () => {
-    // Valider le numéro de téléphone
-    const phoneValidation = validatePhone(buyerInfo.phone);
-    
+    // Vérifier tous les champs requis et la validation
     return (
       buyerInfo.name.trim() !== "" && 
       buyerInfo.phone.trim() !== "" && 
@@ -391,5 +412,14 @@ export default function Checkout() {
         </div>
       </div>
     </div>
+  );
+}
+
+// Page principale avec Suspense
+export default function CheckoutPage() {
+  return (
+    <Suspense fallback={<CheckoutLoading />}>
+      <CheckoutContent />
+    </Suspense>
   );
 }

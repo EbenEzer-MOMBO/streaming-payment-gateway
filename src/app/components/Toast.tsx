@@ -30,6 +30,7 @@ export function Toast({ id, type, title, message, duration = 5000, onClose }: To
       clearTimeout(timer);
       clearTimeout(autoCloseTimer);
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [duration]);
 
   const handleClose = () => {
