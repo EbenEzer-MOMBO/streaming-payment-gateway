@@ -57,8 +57,7 @@ export default function PaymentCountdown({
   };
 
   return (
-    <div className="fixed inset-0 bg-gradient-to-br from-green-500/20 via-emerald-500/20 to-teal-500/20 backdrop-blur-md flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-8 max-w-md w-full mx-4 shadow-2xl">
+    <div className="bg-white rounded-lg p-8 max-w-md w-full shadow-2xl">
         <div className="text-center">
           {/* Icône du mode de paiement */}
           <div className="mx-auto mb-6 w-20 h-20 bg-green-100 rounded-full flex items-center justify-center text-4xl">
@@ -129,7 +128,7 @@ export default function PaymentCountdown({
             </div>
             
             <p className="text-sm text-gray-600">
-              Vérification automatique en cours...
+              Vérification automatique toutes les 3 secondes...
             </p>
           </div>
 
@@ -157,6 +156,5 @@ export default function PaymentCountdown({
           </p>
         </div>
       </div>
-    </div>
   );
 }

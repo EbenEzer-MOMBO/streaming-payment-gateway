@@ -31,12 +31,12 @@ const services = {
   "netflix": {
     id: "netflix",
     name: "Netflix",
-    price: "3500"
+    price: "100"
   },
   "prime": {
     id: "prime",
     name: "Prime Video",
-    price: "3500"
+    price: "100"
   }
 };
 
@@ -193,7 +193,7 @@ export default function CheckoutPage() {
           setIsProcessing(false);
           setShowProgressBar(false);
         }
-      }, 100); // Délai minimal pour permettre au ProgressBar de s'afficher
+      }, 10000); // Délai de 10 secondes pour le ProgressBar
     }
   };
   
@@ -233,7 +233,7 @@ export default function CheckoutPage() {
       {/* Afficher le ProgressBar pendant le traitement */}
       {showProgressBar && (
         <PaymentProgressBar
-          duration={5} // Durée en secondes
+          duration={10} // Durée en secondes
           onComplete={handleProgressComplete}
           title="Création de votre facture"
           description="Veuillez patienter pendant que nous préparons votre paiement..."

@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import PaymentCountdown from "@/app/components/PaymentCountdown";
 import { checkBillStatus } from "@/services/paymentService";
 
 export default function PaymentConfirmation() {
@@ -17,7 +16,10 @@ export default function PaymentConfirmation() {
   // État pour le statut du paiement
   const [paymentStatus, setPaymentStatus] = useState<"loading" | "paid" | "pending" | "error">("loading");
   const [errorMessage, setErrorMessage] = useState("");
-  const [showCountdown, setShowCountdown] = useState(false);
+  
+  // État pour le minuteur
+  const [timeLeft, setTimeLeft] = useState(60); // 1 minute
+  const [progress, setProgress] = useState(100);
   
   // Récupérer les paramètres de l'URL
   useEffect(() => {
@@ -31,10 +33,34 @@ export default function PaymentConfirmation() {
     }
   }, []);
   
-  // Fonction pour gérer la fin du compte à rebours
-  const handleCountdownComplete = () => {
-    // Vérifier l'état du paiement après la fin du compte à rebours
-    checkPaymentStatus();
+  // Gestion du minuteur
+  useEffect(() => {
+    if (paymentStatus !== "pending") return;
+    
+    const interval = setInterval(() => {
+      setTimeLeft((prevTime) => {
+        if (prevTime <= 1) {
+          clearInterval(interval);
+          // Vérifier le statut du paiement lorsque le compteur atteint zéro
+          checkPaymentStatus();
+          return 0;
+        }
+        return prevTime - 1;
+      });
+      
+      setProgress((prevProgress) => {
+        return (timeLeft - 1) / 60 * 100;
+      });
+    }, 1000);
+    
+    return () => clearInterval(interval);
+  }, [paymentStatus, timeLeft]);
+  
+  // Fonction pour formater le temps
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
   
   // Fonction pour annuler le paiement
@@ -45,33 +71,33 @@ export default function PaymentConfirmation() {
   // Fonction pour vérifier l'état du paiement
   const checkPaymentStatus = async () => {
     if (!billId) {
+      console.error("Identifiant de facture manquant");
       setPaymentStatus("error");
       setErrorMessage("Identifiant de facture manquant");
       return;
     }
     
+    console.log("Vérification du statut de paiement pour la facture:", billId);
+    
     try {
       const status = await checkBillStatus(billId);
+      console.log("Statut reçu:", status);
       
       if (status.state === "paid" || status.state === "processed") {
+        console.log("Paiement confirmé:", status.state);
         setPaymentStatus("paid");
-        setShowCountdown(false);
-      } else if (status.state === "ready") {
+      } else if (status.state === "ready" || status.state === "pending") {
+        console.log("Paiement en attente:", status.state);
         setPaymentStatus("pending");
-        // Afficher le compte à rebours si ce n'est pas déjà fait
-        if (!showCountdown) {
-          setShowCountdown(true);
-        }
       } else {
+        console.error("État de paiement inconnu:", status.state);
         setPaymentStatus("error");
-        setErrorMessage("État de paiement inconnu");
-        setShowCountdown(false);
+        setErrorMessage(`État de paiement inconnu: ${status.state}`);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erreur lors de la vérification du paiement:", error);
       setPaymentStatus("error");
-      setErrorMessage("Impossible de vérifier l&apos;état du paiement");
-      setShowCountdown(false);
+      setErrorMessage(`Erreur: ${error.message || "Impossible de vérifier l'état du paiement"}`);
     }
   };
   
@@ -79,9 +105,23 @@ export default function PaymentConfirmation() {
     // Vérifier l'état initial du paiement seulement si billId existe
     if (billId) {
       checkPaymentStatus();
+      
+      // Mettre en place une vérification périodique toutes les 3 secondes
+      const intervalId = setInterval(() => {
+        if (paymentStatus !== "paid" && paymentStatus !== "error") {
+          console.log("Vérification périodique du paiement...");
+          checkPaymentStatus();
+        } else {
+          // Arrêter la vérification si le paiement est terminé ou en erreur
+          clearInterval(intervalId);
+        }
+      }, 3000); // Vérification toutes les 3 secondes
+      
+      // Nettoyer l'intervalle lors du démontage du composant
+      return () => clearInterval(intervalId);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [billId]);
+  }, [billId, paymentStatus]);
   
   const handleBackToHome = () => {
     router.push("/");
@@ -105,6 +145,16 @@ export default function PaymentConfirmation() {
     );
   }
   
+  // Obtenir le logo du mode de paiement
+  const getPaymentLogo = () => {
+    if (paymentMethod === 'moov') {
+      return "/moov_money.png"; // Logo Moov Money
+    } else if (paymentMethod === 'airtel') {
+      return "/airtel_money.png"; // Logo Airtel Money
+    }
+    return "";
+  };
+  
   return (
     <div className="relative min-h-screen w-full overflow-hidden">
       {/* Arrière-plan avec overlay */}
@@ -113,22 +163,103 @@ export default function PaymentConfirmation() {
       {/* Contenu principal */}
       <div className="relative z-10 container mx-auto py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md mx-auto bg-white/10 backdrop-blur-lg rounded-xl p-8 shadow-xl border border-white/10">
-          {/* Afficher le compte à rebours pour le paiement en attente */}
-          {showCountdown && paymentStatus === "pending" && paymentMethod && phoneNumber && (
-            <PaymentCountdown
-              duration={180} // 3 minutes pour effectuer le paiement
-              onComplete={handleCountdownComplete}
-              onCancel={handleCancelPayment}
-              paymentMethod={paymentMethod}
-              phoneNumber={phoneNumber}
-            />
-          )}
           
           {paymentStatus === "loading" && (
             <div className="text-center py-8">
               <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white mb-4"></div>
               <h2 className="text-xl font-semibold text-white mb-2">Vérification du paiement...</h2>
               <p className="text-white/70">Veuillez patienter pendant que nous vérifions votre paiement</p>
+            </div>
+          )}
+          
+          {paymentStatus === "pending" && (
+            <div className="bg-white/10 backdrop-blur-lg rounded-xl p-8 shadow-xl border border-white/10">
+              <div className="text-center">
+                {/* Logo du mode de paiement */}
+                <div className="mx-auto mb-6 w-24 h-24 bg-white/10 backdrop-blur-lg rounded-xl flex items-center justify-center p-2">
+                  <img 
+                    src={getPaymentLogo()} 
+                    alt={paymentMethod === "airtel" ? "Airtel Money" : "Moov Money"}
+                    className="max-w-full max-h-full object-contain"
+                  />
+                </div>
+                
+                {/* Titre */}
+                <h3 className="text-xl font-semibold text-white mb-2">
+                  Confirmation du paiement
+                </h3>
+                
+                {/* Instructions */}
+                <div className="mb-6 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+                  <p className="text-sm text-yellow-300 font-medium mb-2">
+                    ⚠️ Ne fermez pas cet écran
+                  </p>
+                  <p className="text-sm text-white/80">
+                    Vérifiez votre téléphone <strong className="text-white">{phoneNumber}</strong> et suivez les instructions {paymentMethod?.toUpperCase()} pour confirmer le paiement.
+                  </p>
+                </div>
+                
+                {/* Décompte visuel */}
+                <div className="mb-6">
+                  <div className="relative w-32 h-32 mx-auto mb-4">
+                    {/* Cercle de fond */}
+                    <svg className="w-32 h-32 transform -rotate-90" viewBox="0 0 120 120">
+                      <circle
+                        cx="60"
+                        cy="60"
+                        r="54"
+                        stroke="rgba(255, 255, 255, 0.2)"
+                        strokeWidth="8"
+                        fill="none"
+                      />
+                      <circle
+                        cx="60"
+                        cy="60"
+                        r="54"
+                        stroke="rgba(59, 130, 246, 0.8)"
+                        strokeWidth="8"
+                        fill="none"
+                        strokeLinecap="round"
+                        strokeDasharray="339.292"
+                        strokeDashoffset={339.292 * (1 - progress / 100)}
+                      />
+                    </svg>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-white">{formatTime(timeLeft)}</div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Barre de progression linéaire */}
+                  <div className="w-full bg-white/10 rounded-full h-2 mb-2">
+                    <div 
+                      className="bg-gradient-to-r from-blue-600 to-purple-600 h-2 rounded-full transition-all duration-1000 ease-linear"
+                      style={{ width: `${progress}%` }}
+                    ></div>
+                  </div>
+                  
+                  <p className="text-sm text-white/70">
+                    Vérification automatique toutes les 3 secondes...
+                  </p>
+                </div>
+                
+                {/* Messages d'état */}
+                <div className="space-y-2 mb-6">
+                  <div className="flex items-center justify-center text-sm text-white/70">
+                    <div className="animate-pulse w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
+                    En attente de confirmation
+                  </div>
+                </div>
+                
+                {/* Bouton d'annulation */}
+                <button
+                  onClick={handleCancelPayment}
+                  className="w-full px-4 py-3 text-white bg-white/10 border border-white/20 rounded-lg hover:bg-white/20 transition-colors"
+                >
+                  Annuler
+                </button>
+              </div>
             </div>
           )}
           
@@ -141,7 +272,7 @@ export default function PaymentConfirmation() {
               </div>
               <h2 className="text-2xl font-bold text-white mb-2">Paiement réussi !</h2>
               <p className="text-white/70 mb-6">
-                Votre abonnement à {serviceName} a été activé avec succès.
+                Votre abonnement à {serviceName} a été payé avec succès. Vous recevrez les instructions de connexion sur WhatsApp ou dans votre boîte mail.
               </p>
               <button
                 onClick={handleBackToHome}
@@ -149,21 +280,6 @@ export default function PaymentConfirmation() {
               >
                 Retour à l&apos;accueil
               </button>
-            </div>
-          )}
-          
-          {paymentStatus === "pending" && !showCountdown && (
-            <div className="text-center py-6">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-yellow-500/20 mb-4">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <h2 className="text-2xl font-bold text-white mb-2">Paiement en cours...</h2>
-              <p className="text-white/70 mb-6">
-                Votre paiement est en cours de traitement. Veuillez ne pas fermer cette page.
-              </p>
-              <div className="inline-block animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-white"></div>
             </div>
           )}
           

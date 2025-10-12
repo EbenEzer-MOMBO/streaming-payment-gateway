@@ -37,7 +37,7 @@ interface CreateBillResponse {
 }
 
 interface BillStatusResponse {
-  state: "ready" | "paid" | "processed";
+  state: "ready" | "paid" | "processed" | "pending";
 }
 
 /**
@@ -52,6 +52,8 @@ export const createBill = async (payload: CreateBillPayload): Promise<BillRespon
       formData.append(key, value.toString());
     });
     
+    console.log("Création d'une nouvelle facture avec les données:", payload);
+    
     const response = await fetch("https://itech-gabon.alwaysdata.net/ebilling-pay/nouvelle_facture.php", {
       method: "POST",
       headers: {
@@ -61,15 +63,29 @@ export const createBill = async (payload: CreateBillPayload): Promise<BillRespon
     });
     
     if (!response.ok) {
+      console.error(`Erreur HTTP lors de la création de facture: ${response.status}`);
       throw new Error(`Erreur HTTP: ${response.status}`);
     }
     
-    const data: CreateBillResponse = await response.json();
+    const responseText = await response.text();
+    console.log("Réponse brute de l'API (création):", responseText);
+    
+    let data: CreateBillResponse;
+    try {
+      data = JSON.parse(responseText);
+      console.log("Réponse parsée de création de facture:", data);
+    } catch (parseError) {
+      console.error("Erreur de parsing JSON (création):", parseError);
+      console.error("Réponse non-JSON reçue:", responseText);
+      throw new Error("Réponse invalide du serveur lors de la création de facture");
+    }
     
     if (data.success !== "transaction_completed") {
+      console.error("La création de la facture a échoué:", data);
       throw new Error("La création de la facture a échoué");
     }
     
+    console.log("Facture créée avec succès:", data.response.e_bills[0]);
     return data.response.e_bills[0];
   } catch (error) {
     console.error("Erreur lors de la création de la facture:", error);
@@ -85,6 +101,8 @@ export const checkBillStatus = async (billId: string): Promise<BillStatusRespons
     const formData = new URLSearchParams();
     formData.append("bill_id", billId);
     
+    console.log("Vérification de l'état de la facture:", billId);
+    
     const response = await fetch("https://itech-gabon.alwaysdata.net/ebilling-pay/etat_facture.php", {
       method: "POST",
       headers: {
@@ -94,10 +112,28 @@ export const checkBillStatus = async (billId: string): Promise<BillStatusRespons
     });
     
     if (!response.ok) {
+      console.error(`Erreur HTTP lors de la vérification: ${response.status}`);
       throw new Error(`Erreur HTTP: ${response.status}`);
     }
     
-    const data: BillStatusResponse = await response.json();
+    const responseText = await response.text();
+    console.log("Réponse brute de l'API:", responseText);
+    
+    let data: BillStatusResponse;
+    try {
+      data = JSON.parse(responseText);
+      console.log("État de la facture parsé:", data);
+    } catch (parseError) {
+      console.error("Erreur de parsing JSON:", parseError);
+      console.error("Réponse non-JSON reçue:", responseText);
+      throw new Error("Réponse invalide du serveur");
+    }
+    
+    if (!data.state) {
+      console.error("État de paiement manquant dans la réponse:", data);
+      throw new Error("État de paiement manquant dans la réponse");
+    }
+    
     return data;
   } catch (error) {
     console.error("Erreur lors de la vérification de l'état de la facture:", error);

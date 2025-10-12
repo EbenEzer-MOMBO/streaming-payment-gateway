@@ -86,14 +86,11 @@ function ServiceCard({
 
   return (
     <div
-      className={`service-card ${isSelected ? 'expanded' : ''} rounded-xl cursor-pointer transition-all duration-500 overflow-hidden backdrop-blur-lg
-        ${isSelected
-          ? "bg-white/15 shadow-lg"
-          : "bg-white/10 hover:bg-white/15 border border-white/5"
-        }`}
+      className={`service-card ${isSelected ? 'expanded' : ''} rounded-xl cursor-pointer transition-all duration-300 overflow-hidden backdrop-blur-lg`}
       style={{
+        backgroundColor: isSelected ? `rgba(255, 255, 255, 0.15)` : `rgba(255, 255, 255, 0.1)`,
         boxShadow: isSelected ? `0 8px 32px 0 rgba(31, 38, 135, 0.2)` : 'none',
-        border: isSelected ? `3px solid ${service.color}30` : '',
+        border: isSelected ? `3px solid ${service.color}` : '1px solid rgba(255, 255, 255, 0.1)',
       }}
       onClick={() => {
         onClick();
@@ -124,9 +121,9 @@ function ServiceCard({
       
       {isSelected && (
         <div 
-          className="p-4 bg-gradient-to-r animate-fade-in"
+          className="p-4 animate-fade-in"
           style={{ 
-            backgroundImage: `linear-gradient(to right, ${service.color}20, ${service.color}40)`
+            background: `linear-gradient(to right, ${service.color}20, ${service.color}40)`
           }}
         >
           <button
@@ -162,7 +159,7 @@ export default function Home() {
       <div className="relative z-10 w-full max-w-5xl">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-white mb-4">
-            Bienvenue sur notre service de streaming
+            Bienvenue sur votre service de streaming 🇬🇦
           </h1>
           <p className="text-xl text-white/70">
             Choisissez votre service préféré
