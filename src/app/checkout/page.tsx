@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import PhoneNumberInput from "../components/PhoneNumberInput";
@@ -26,38 +26,23 @@ const paymentMethods: PaymentMethod[] = [
   }
 ];
 
-// Composant de chargement pour la Suspense
-function CheckoutLoading() {
-  return (
-    <div className="flex items-center justify-center min-h-screen">
-      <div className="text-center">
-        <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white mb-4"></div>
-        <h2 className="text-xl font-semibold text-white">Chargement...</h2>
-      </div>
-    </div>
-  );
-}
+// Données des services disponibles
+const services = {
+  "netflix": {
+    id: "netflix",
+    name: "Netflix",
+    price: "3500"
+  },
+  "prime": {
+    id: "prime",
+    name: "Prime Video",
+    price: "3500"
+  }
+};
 
-// Composant principal qui utilise window.location pour les paramètres
-function CheckoutContent() {
+export default function CheckoutPage() {
   const router = useRouter();
-  const [params, setParams] = useState<{[key: string]: string}>({});
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string | null>(null);
-  
-  // Récupérer les paramètres d'URL manuellement
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const paramsObj: {[key: string]: string} = {};
-    urlParams.forEach((value, key) => {
-      paramsObj[key] = value;
-    });
-    setParams(paramsObj);
-  }, []);
-  
-  // Récupérer les informations du service depuis les paramètres d'URL
-  const serviceId = params.service || "";
-  const serviceName = params.name || "";
-  const servicePrice = params.price || "";
   
   // État pour les informations de l'acheteur
   const [buyerInfo, setBuyerInfo] = useState({
@@ -77,6 +62,24 @@ function CheckoutContent() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [showProgressBar, setShowProgressBar] = useState(false);
   const [paymentError, setPaymentError] = useState("");
+  
+  // État pour stocker le service sélectionné
+  const [selectedService, setSelectedService] = useState<{id: string, name: string, price: string} | null>(null);
+  
+  // Récupérer les paramètres d'URL de manière sécurisée
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const serviceId = urlParams.get('service');
+      
+      if (serviceId && services[serviceId as keyof typeof services]) {
+        setSelectedService(services[serviceId as keyof typeof services]);
+      } else {
+        // Si pas de service valide dans l'URL, rediriger vers la page d'accueil
+        router.push('/');
+      }
+    }
+  }, [router]);
   
   const validatePaymentPhone = (phone: string, paymentType: string | null): string => {
     if (!phone || !paymentType) return '';
@@ -137,13 +140,18 @@ function CheckoutContent() {
       !phoneError &&
       selectedPaymentMethod !== null &&
       paymentNumber.trim() !== "" &&
-      !paymentNumberError // S'assurer qu'il n'y a pas d'erreur de validation
+      !paymentNumberError && // S'assurer qu'il n'y a pas d'erreur de validation
+      selectedService !== null // S'assurer qu'un service est sélectionné
     );
   };
   
   // Gérer la soumission du formulaire
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!selectedService) {
+      return;
+    }
     
     // Valider le numéro de téléphone
     const phoneError = validatePhone(buyerInfo.phone);
@@ -169,8 +177,8 @@ function CheckoutContent() {
           const bill = await createBill({
             payer_email: buyerInfo.email || "ebenezermombo@gmail.com",
             payer_msisdn: paymentNumber,
-            amount: Number(servicePrice),
-            short_description: `Abonnement ${serviceName}`,
+            amount: Number(selectedService.price),
+            short_description: `Abonnement ${selectedService.name}`,
             external_reference: generateExternalReference(),
             payer_last_name: buyerInfo.name.split(' ')[0],
             payer_first_name: buyerInfo.name.split(' ').slice(1).join(' ') || buyerInfo.name,
@@ -178,7 +186,7 @@ function CheckoutContent() {
           });
           
           // Rediriger vers la page de confirmation avec l'ID de la facture et les informations de paiement
-          router.push(`/checkout/confirmation?bill_id=${bill.bill_id}&service_name=${serviceName}&payment_method=${selectedPaymentMethod}&phone_number=${paymentNumber}`);
+          router.push(`/checkout/confirmation?bill_id=${bill.bill_id}&service_name=${selectedService.name}&payment_method=${selectedPaymentMethod}&phone_number=${paymentNumber}`);
         } catch (error) {
           console.error("Erreur lors du traitement du paiement:", error);
           setPaymentError("Une erreur s'est produite lors du traitement du paiement. Veuillez réessayer.");
@@ -196,21 +204,28 @@ function CheckoutContent() {
   };
 
   // Réinitialiser l'erreur de validation lorsque le moyen de paiement change
-  useEffect(() => {
+  const handlePaymentMethodChange = (method: string) => {
+    setSelectedPaymentMethod(method);
     setPaymentNumber("");
     setPaymentNumberError("");
-  }, [selectedPaymentMethod]);
+  };
 
-  // Si aucun service n'est sélectionné, rediriger vers la page d'accueil
-  useEffect(() => {
-    if (!serviceId || !serviceName || !servicePrice) {
-      router.push("/");
-    }
-  }, [serviceId, serviceName, servicePrice, router]);
-
-  // Si les paramètres sont manquants, afficher un message de chargement
-  if (!serviceId || !serviceName || !servicePrice) {
-    return <div className="flex items-center justify-center min-h-screen">Chargement...</div>;
+  // Si nous sommes en train de charger le service ou si aucun service n'est sélectionné
+  if (!selectedService) {
+    return (
+      <div className="relative min-h-screen w-full overflow-hidden">
+        <div className="absolute inset-0 z-0 bg-gradient-to-b from-gray-900 to-black"></div>
+        <div className="relative z-10 container mx-auto py-12 px-4 sm:px-6 lg:px-8">
+          <div className="max-w-md mx-auto bg-white/10 backdrop-blur-lg rounded-xl p-8 shadow-xl border border-white/10">
+            <div className="text-center py-8">
+              <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white mb-4"></div>
+              <h2 className="text-xl font-semibold text-white mb-2">Chargement...</h2>
+              <p className="text-white/70">Veuillez patienter</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -242,10 +257,10 @@ function CheckoutContent() {
               <h2 className="text-xl font-semibold text-white mb-4">Récapitulatif</h2>
               <div className="flex justify-between items-center">
                 <div>
-                  <p className="text-white font-medium">{serviceName}</p>
+                  <p className="text-white font-medium">{selectedService.name}</p>
                   <p className="text-white/70 text-sm">Abonnement mensuel</p>
                 </div>
-                <p className="text-white font-bold">{servicePrice} FCFA</p>
+                <p className="text-white font-bold">{selectedService.price} FCFA</p>
               </div>
             </div>
 
@@ -321,7 +336,7 @@ function CheckoutContent() {
                           ? "bg-white/20 border border-white/30"
                           : "bg-white/10 border border-white/5 hover:bg-white/15"
                       }`}
-                      onClick={() => setSelectedPaymentMethod(method.id)}
+                      onClick={() => handlePaymentMethodChange(method.id)}
                     >
                        <div className="w-10 h-10 relative flex-shrink-0 bg-white rounded-md flex items-center justify-center">
                         <Image
@@ -412,14 +427,5 @@ function CheckoutContent() {
         </div>
       </div>
     </div>
-  );
-}
-
-// Page principale avec Suspense
-export default function CheckoutPage() {
-  return (
-    <Suspense fallback={<CheckoutLoading />}>
-      <CheckoutContent />
-    </Suspense>
   );
 }
