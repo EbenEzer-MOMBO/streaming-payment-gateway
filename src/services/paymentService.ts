@@ -40,11 +40,42 @@ interface BillStatusResponse {
   state: "ready" | "paid" | "processed" | "pending";
 }
 
+// Définition des prix officiels des services pour validation côté serveur
+const OFFICIAL_SERVICE_PRICES = {
+  "netflix": 3500,
+  "prime": 3500
+};
+
+/**
+ * Valide le montant du paiement en fonction du service sélectionné
+ */
+const validateServiceAmount = (serviceId: string, amount: number): boolean => {
+  if (!serviceId || !OFFICIAL_SERVICE_PRICES[serviceId as keyof typeof OFFICIAL_SERVICE_PRICES]) {
+    return false;
+  }
+  
+  return OFFICIAL_SERVICE_PRICES[serviceId as keyof typeof OFFICIAL_SERVICE_PRICES] === amount;
+};
+
 /**
  * Crée une nouvelle facture dans le système E-Billing
  */
 export const createBill = async (payload: CreateBillPayload): Promise<BillResponse> => {
   try {
+    // Extraire le service ID à partir de la description
+    const serviceMatch = payload.short_description.match(/Abonnement\s+(\w+)/i);
+    const serviceId = serviceMatch ? serviceMatch[1].toLowerCase() : null;
+    
+    // Valider le montant du paiement
+    if (!serviceId || !validateServiceAmount(serviceId, payload.amount)) {
+      console.error("Tentative de manipulation du montant détectée:", {
+        service: serviceId,
+        requestedAmount: payload.amount,
+        officialAmount: serviceId ? OFFICIAL_SERVICE_PRICES[serviceId as keyof typeof OFFICIAL_SERVICE_PRICES] : "unknown"
+      });
+      throw new Error("Montant de paiement non valide pour ce service");
+    }
+    
     const formData = new URLSearchParams();
     
     // Ajout des paramètres au formData
@@ -146,12 +177,25 @@ export const checkBillStatus = async (billId: string): Promise<BillStatusRespons
 };
 
 /**
- * Génère une référence externe unique
+ * Génère une référence externe unique avec un jeton anti-CSRF
  */
 export const generateExternalReference = (): string => {
   const prefix = "SPG"; // Streaming Payment Gateway
   const timestamp = Date.now().toString().slice(-8);
   const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+  const csrfToken = Math.random().toString(36).substring(2, 15);
   
-  return `${prefix}${timestamp}${random}`;
+  // Stockage du token CSRF dans le sessionStorage pour validation ultérieure
+  if (typeof window !== 'undefined') {
+    sessionStorage.setItem('csrf_token', csrfToken);
+  }
+  
+  return `${prefix}${timestamp}${random}_${csrfToken}`;
+};
+
+/**
+ * Expose les prix officiels pour validation côté client
+ */
+export const getOfficialServicePrice = (serviceId: string): number | null => {
+  return OFFICIAL_SERVICE_PRICES[serviceId as keyof typeof OFFICIAL_SERVICE_PRICES] || null;
 };

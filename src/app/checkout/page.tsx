@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import PhoneNumberInput from "../components/PhoneNumberInput";
 import PaymentProgressBar from "../components/PaymentProgressBar";
-import { createBill, generateExternalReference } from "@/services/paymentService";
+import { createBill, generateExternalReference, getOfficialServicePrice } from "@/services/paymentService";
 
 interface PaymentMethod {
   id: string;
@@ -31,12 +31,12 @@ const services = {
   "netflix": {
     id: "netflix",
     name: "Netflix",
-    price: "100"
+    price: "3500"
   },
   "prime": {
     id: "prime",
     name: "Prime Video",
-    price: "100"
+    price: "3500"
   }
 };
 
@@ -73,7 +73,21 @@ export default function CheckoutPage() {
       const serviceId = urlParams.get('service');
       
       if (serviceId && services[serviceId as keyof typeof services]) {
-        setSelectedService(services[serviceId as keyof typeof services]);
+        const service = services[serviceId as keyof typeof services];
+        
+        // Vérifier que le prix du service correspond au prix officiel
+        const officialPrice = getOfficialServicePrice(service.id);
+        if (officialPrice && Number(service.price) === officialPrice) {
+          setSelectedService(service);
+        } else {
+          console.error("Prix du service non conforme:", {
+            service: service.id,
+            price: service.price,
+            officialPrice: officialPrice
+          });
+          // Rediriger vers la page d'accueil en cas de manipulation du prix
+          router.push('/');
+        }
       } else {
         // Si pas de service valide dans l'URL, rediriger vers la page d'accueil
         router.push('/');
@@ -161,6 +175,13 @@ export default function CheckoutPage() {
     const paymentError = validatePaymentPhone(paymentNumber, selectedPaymentMethod);
     setPaymentNumberError(paymentError);
     
+    // Vérifier que le prix du service correspond au prix officiel
+    const officialPrice = getOfficialServicePrice(selectedService.id);
+    if (!officialPrice || Number(selectedService.price) !== officialPrice) {
+      setPaymentError("Prix du service non valide. Veuillez rafraîchir la page et réessayer.");
+      return;
+    }
+    
     if (isFormValid()) {
       setIsProcessing(true);
       setPaymentError("");
@@ -173,32 +194,48 @@ export default function CheckoutPage() {
           // Déterminer le système de paiement pour l'API
           const paymentSystem = selectedPaymentMethod === "airtel" ? "airtelmoney" : "moovmoney1";
           
+          // Récupérer le jeton anti-CSRF
+          const externalRef = generateExternalReference();
+          
           // Créer la facture via l'API
           const bill = await createBill({
             payer_email: buyerInfo.email || "ebenezermombo@gmail.com",
             payer_msisdn: paymentNumber,
-            amount: Number(selectedService.price),
+            amount: officialPrice, // Utiliser le prix officiel du service, pas celui du state
             short_description: `Abonnement ${selectedService.name}`,
-            external_reference: generateExternalReference(),
+            external_reference: externalRef,
             payer_last_name: buyerInfo.name.split(' ')[0],
             payer_first_name: buyerInfo.name.split(' ').slice(1).join(' ') || buyerInfo.name,
             payment_system: paymentSystem
           });
           
+          // Vérifier que le montant dans la réponse correspond au montant attendu
+          if (bill.amount !== officialPrice) {
+            console.error("Montant de la facture différent du prix officiel:", {
+              billAmount: bill.amount,
+              officialPrice: officialPrice
+            });
+            throw new Error("Montant de la facture non valide");
+          }
+          
           // Envoi des données complètes vers le webhook (incluant les informations de l'acheteur)
           try {
             console.log("Envoi des données vers le webhook...");
+            // Récupérer le token CSRF depuis le sessionStorage
+            const csrfToken = typeof window !== 'undefined' ? sessionStorage.getItem('csrf_token') : null;
+            
             const webhookResponse = await fetch("https://hook.eu2.make.com/qv3xiqhp1pth43b8xwpqn1krfj3kd1h2", {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
+                "X-CSRF-Token": csrfToken || "",
               },
               body: JSON.stringify({
                 bill: bill,
                 service: {
                   id: selectedService.id,
                   name: selectedService.name,
-                  price: selectedService.price
+                  price: officialPrice.toString() // Utiliser le prix officiel
                 },
                 buyer: {
                   name: buyerInfo.name,
@@ -210,7 +247,8 @@ export default function CheckoutPage() {
                   number: paymentNumber
                 },
                 timestamp: new Date().toISOString(),
-                status: "created"
+                status: "created",
+                csrf_token: csrfToken
               }),
             });
             
@@ -226,9 +264,9 @@ export default function CheckoutPage() {
           
           // Rediriger vers la page de confirmation avec l'ID de la facture et les informations de paiement
           router.push(`/checkout/confirmation?bill_id=${bill.bill_id}&service_name=${selectedService.name}&payment_method=${selectedPaymentMethod}&phone_number=${paymentNumber}`);
-        } catch (error) {
+        } catch (error: any) {
           console.error("Erreur lors du traitement du paiement:", error);
-          setPaymentError("Une erreur s'est produite lors du traitement du paiement. Veuillez réessayer.");
+          setPaymentError(`Une erreur s'est produite: ${error.message || "Veuillez réessayer."}`);
           setIsProcessing(false);
           setShowProgressBar(false);
         }

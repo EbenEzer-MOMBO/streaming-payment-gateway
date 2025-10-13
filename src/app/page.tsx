@@ -36,13 +36,17 @@ function Slideshow() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const images = [
     "/addams-family-wednesday-s2-hd-wallpaper-uhdpaper.com-184@5@h.jpg",
-    "/peacemaker-season-2-john-cena-hd-wallpaper-uhdpaper.com-382@5@i.jpg"
+    "/peacemaker-season-2-john-cena-hd-wallpaper-uhdpaper.com-382@5@i.jpg",
+    "/baki-the-grappler-1449081.webp",
+    "/rebel-moon-movie-cast-hd-wallpaper-uhdpaper.com-378@1@n.jpg",
+    "/stranger-things-season-4-poster-hd-wallpaper-uhdpaper.com-880@1@g.jpg",
+    "/the-boys-cast-hd-wallpaper-uhdpaper.com-54@0@k.jpg"
   ];
 
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentImageIndex((prevIndex) => (prevIndex + 1) % images.length);
-    }, 5000); // Changer l'image toutes les 5 secondes
+    }, 10000); // Changer l'image toutes les 10 secondes
 
     return () => clearInterval(interval);
   }, []);
