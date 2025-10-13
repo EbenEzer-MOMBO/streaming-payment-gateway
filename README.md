@@ -5,6 +5,8 @@
 
 Une passerelle de paiement sécurisée pour les services de streaming, développée avec Next.js et intégrée avec les solutions de paiement mobile en Afrique (Airtel Money, Moov Money).
 
+**AVERTISSEMENT** : Ce projet est strictement à but éducatif et de démonstration technique. Il n'est pas destiné à être utilisé pour collecter des paiements réels ou à générer des revenus en utilisant les marques Netflix, Prime Video ou autres services de streaming sans autorisation. Les logos et noms de marques sont utilisés uniquement à des fins de démonstration de l'interface utilisateur.
+
 ## Fonctionnalités
 
 - Interface utilisateur moderne avec design responsive
@@ -66,3 +68,7 @@ Le moyen le plus simple de déployer cette application est d'utiliser la [platef
 ## Licence
 
 Ce projet est sous licence propriétaire. Tous droits réservés.
+
+## Mentions légales
+
+Ce projet est une démonstration technique et n'est pas affilié, sponsorisé ou approuvé par Netflix, Amazon Prime Video, ou leurs sociétés mères. Tous les noms de marques, logos et marques déposées appartiennent à leurs propriétaires respectifs et sont utilisés ici uniquement à des fins d'illustration de l'interface utilisateur dans un contexte éducatif. Ce projet ne doit pas être utilisé dans un environnement de production pour collecter des paiements réels sans les autorisations appropriées des détenteurs de droits.
