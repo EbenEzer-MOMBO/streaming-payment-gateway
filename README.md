@@ -1,5 +1,8 @@
 # Streaming Payment Gateway
 
+<img width="1440" height="818" alt="Capture d’écran 2025-10-13 à 11 10 11" src="https://github.com/user-attachments/assets/6d5b9233-162c-4aa6-aa4f-9bbbee7740fa" />
+
+
 Une passerelle de paiement sécurisée pour les services de streaming, développée avec Next.js et intégrée avec les solutions de paiement mobile en Afrique (Airtel Money, Moov Money).
 
 ## Fonctionnalités
@@ -53,6 +56,8 @@ Aucune configuration spécifique n'est requise pour le développement local. Pou
 - **Frontend** : Next.js, React, TailwindCSS
 - **API de paiement** : E-Billing
 - **Méthodes de paiement** : Airtel Money, Moov Money
+<img width="1200" height="1197" alt="airtel_money" src="https://github.com/user-attachments/assets/ccdc116a-25c9-4f91-99e0-1515fa572024" />
+<img width="512" height="512" alt="moov_money" src="https://github.com/user-attachments/assets/9ca3692c-f4fa-4dd2-b3a4-54974d068da2" />
 
 ## Déploiement
 
