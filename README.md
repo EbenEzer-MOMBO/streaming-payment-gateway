@@ -56,8 +56,8 @@ Aucune configuration spécifique n'est requise pour le développement local. Pou
 - **Frontend** : Next.js, React, TailwindCSS
 - **API de paiement** : E-Billing
 - **Méthodes de paiement** : Airtel Money, Moov Money
-<img width="1200" height="1197" alt="airtel_money" src="https://github.com/user-attachments/assets/ccdc116a-25c9-4f91-99e0-1515fa572024" />
-<img width="512" height="512" alt="moov_money" src="https://github.com/user-attachments/assets/9ca3692c-f4fa-4dd2-b3a4-54974d068da2" />
+<img width="100" height="100" alt="airtel_money" src="https://github.com/user-attachments/assets/ccdc116a-25c9-4f91-99e0-1515fa572024" />
+<img width="100" height="100" alt="moov_money" src="https://github.com/user-attachments/assets/9ca3692c-f4fa-4dd2-b3a4-54974d068da2" />
 
 ## Déploiement
 
