@@ -1,36 +1,63 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Streaming Payment Gateway
 
-## Getting Started
+Une passerelle de paiement sécurisée pour les services de streaming, développée avec Next.js et intégrée avec les solutions de paiement mobile en Afrique (Airtel Money, Moov Money).
 
-First, run the development server:
+## Fonctionnalités
+
+- Interface utilisateur moderne avec design responsive
+- Intégration avec l'API E-Billing pour les paiements mobiles
+- Gestion sécurisée des transactions
+- Validation des paiements en temps réel
+- Protection contre la manipulation des montants
+- Système anti-CSRF intégré
+
+## Mesures de sécurité
+
+Le système implémente plusieurs niveaux de sécurité pour garantir l'intégrité des paiements :
+
+- **Validation des prix côté serveur** : Les prix des services sont définis et vérifiés côté serveur
+- **Double vérification des montants** : Validation avant et après la création de facture
+- **Protection CSRF** : Jetons uniques générés pour chaque transaction
+- **Validation des données** : Vérification stricte des numéros de téléphone et informations de paiement
+
+## Architecture
+
+Le projet est structuré comme suit :
+
+- `/src/app` - Pages et composants de l'application
+  - `/checkout` - Processus de paiement et confirmation
+  - `/components` - Composants réutilisables (PaymentProgressBar, PhoneNumberInput, etc.)
+- `/src/services` - Services d'intégration avec les API externes
+- `/public` - Ressources statiques (images, logos)
+
+## Installation
 
 ```bash
+# Cloner le dépôt
+git clone https://github.com/votre-utilisateur/streaming-payment-gateway.git
+cd streaming-payment-gateway
+
+# Installer les dépendances
+npm install
+
+# Lancer le serveur de développement
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Configuration
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Aucune configuration spécifique n'est requise pour le développement local. Pour le déploiement en production, assurez-vous de configurer correctement les variables d'environnement si nécessaire.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Technologies utilisées
 
-## Learn More
+- **Frontend** : Next.js, React, TailwindCSS
+- **API de paiement** : E-Billing
+- **Méthodes de paiement** : Airtel Money, Moov Money
 
-To learn more about Next.js, take a look at the following resources:
+## Déploiement
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Le moyen le plus simple de déployer cette application est d'utiliser la [plateforme Vercel](https://vercel.com/new).
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Licence
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Ce projet est sous licence propriétaire. Tous droits réservés.
