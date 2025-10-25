@@ -42,8 +42,8 @@ interface BillStatusResponse {
 
 // Définition des prix officiels des services pour validation côté serveur
 const OFFICIAL_SERVICE_PRICES = {
-  "netflix": 3500,
-  "prime": 3500
+  "netflix": 2500,
+  "prime": 2500
 };
 
 /**

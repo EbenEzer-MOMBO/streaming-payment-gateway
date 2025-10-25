@@ -31,12 +31,12 @@ const services = {
   "netflix": {
     id: "netflix",
     name: "Netflix",
-    price: "3500"
+    price: "2500"
   },
   "prime": {
     id: "prime",
     name: "Prime Video",
-    price: "3500"
+    price: "2500"
   }
 };
 
@@ -337,7 +337,15 @@ export default function CheckoutPage() {
                   <p className="text-white font-medium">{selectedService.name}</p>
                   <p className="text-white/70 text-sm">Abonnement mensuel</p>
                 </div>
-                <p className="text-white font-bold">{selectedService.price} FCFA</p>
+                <div className="text-right">
+                  <div className="flex items-center justify-end">
+                    <p className="text-white font-bold">{selectedService.price} FCFA</p>
+                    <p className="text-white/50 line-through ml-2 text-sm">3500 FCFA</p>
+                  </div>
+                  <div className="bg-gradient-to-r from-amber-500 to-red-500 text-white text-xs py-1 px-2 rounded-full mt-1 inline-block">
+                    PROMO -1000 FCFA
+                  </div>
+                </div>
               </div>
             </div>
 

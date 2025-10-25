@@ -11,6 +11,8 @@ interface ServiceOption {
   logo: string;
   color: string;
   price: string;
+  originalPrice: string;
+  promoEndDate: string;
 }
 
 // Définition des services disponibles
@@ -20,14 +22,18 @@ const services: ServiceOption[] = [
     name: "Netflix",
     logo: "/Netflix Wordmark.png",
     color: "var(--netflix-color)",
-    price: "3500"
+    price: "2500",
+    originalPrice: "3500",
+    promoEndDate: "30/11/2025"
   },
   {
     id: "prime",
     name: "Prime Video",
     logo: "/Prime Video.png",
     color: "var(--prime-color)",
-    price: "3500"
+    price: "2500",
+    originalPrice: "3500",
+    promoEndDate: "30/11/2025"
   }
 ];
 
@@ -117,9 +123,16 @@ function ServiceCard({
             style={{ objectFit: "contain" }}
           />
         </div>
-        <div className="text-center">
+        <div className="text-center relative">
           <h3 className="text-white text-lg font-medium">Vos films et séries préférés</h3>
-          <p className="text-white/70 mt-1">{service.price} FCFA/mois</p>
+          <div className="flex items-center justify-center mt-1">
+            <p className="text-white/70 font-bold">{service.price} FCFA/mois</p>
+            <p className="text-white/50 line-through ml-2 text-sm">{service.originalPrice} FCFA</p>
+          </div>
+          <div className="absolute -top-4 -right-4 promo-badge text-white text-xs font-bold py-1 px-3 rounded-full shadow-lg transform rotate-12">
+            PROMO!
+          </div>
+          <p className="text-white/60 text-xs mt-1">Jusqu&apos;au {service.promoEndDate}</p>
         </div>
       </div>
       
@@ -165,6 +178,9 @@ export default function Home() {
           <h1 className="text-4xl font-bold text-white mb-4">
             Bienvenue sur votre service de streaming 🇬🇦
           </h1>
+          <div className="bg-gradient-to-r from-amber-500 to-red-500 text-white py-2 px-4 rounded-lg inline-block mb-4 animate-pulse">
+            <span className="font-bold">OFFRE SPÉCIALE</span> : -1000 FCFA sur tous nos abonnements !
+          </div>
           <p className="text-xl text-white/70">
             Choisissez votre service préféré
           </p>
